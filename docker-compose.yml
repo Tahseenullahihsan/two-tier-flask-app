@@ -1,30 +1,34 @@
 version: "3.8"
 services:
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: "admin"
+      MYSQL_DATABASE: "mydb"
+      MYSQL_USER: "admin"
+      MYSQL_PASSWORD: "admin"
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./message.sql:/docker-entrypoint-initdb.d/message.sql
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+  
   backend:
     image: tahseen176/flask
     ports:
       - "5000:5000"
     environment:
       MYSQL_HOST: "mysql"
-      MYSQL_USER: "root"
+      MYSQL_USER: "admin"
       MYSQL_PASSWORD: "admin"
       MYSQL_DB: "mydb"
     depends_on:
-      - mysql
-
-  mysql:
-    image: mysql:5.7
-    environment:
-      MYSQL_HOST: "mysql"
-      MYSQL_USER: "root"
-      MYSQL_DATABASE: "mydb"
-      MYSQL_ROOT_PASSWORD: "admin"
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./message.sql:/docker-entrypoint-initdb.d/message.sql
-      - mysql-data:/var/lib/mysql
-
+      mysql:
+        condition: service_healthy
 volumes:
   mysql-data:
 
